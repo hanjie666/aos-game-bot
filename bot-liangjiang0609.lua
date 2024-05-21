@@ -37,13 +37,14 @@ function determineNextAction()
   local enemyNearby = false
 
   for playerID, playerState in pairs(GameState.Players) do
-    if playerID ~= ao.id and isWithinDistance(currentPlayer.x, currentPlayer.y, playerState.x, playerState.y, 1) then
+    -- 在三个网格内都可以攻击
+    if playerID ~= ao.id and isWithinDistance(currentPlayer.x, currentPlayer.y, playerState.x, playerState.y, 3) then
       enemyNearby = true
       break
     end
   end
 
-  if currentPlayer.energy > 5 and enemyNearby then
+  if currentPlayer.energy > 0 and enemyNearby then
     print(colorCodes.red .. "敌人在范围内，发起攻击，干他嘿嘿嘿" .. colorCodes.reset)
     ao.send({Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(currentPlayer.energy)})
   else
