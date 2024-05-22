@@ -51,7 +51,7 @@ function determineNextAction()
     print("当前玩家不存在")
     return
   end
-
+  print("我的血量：" + currentPlayer.health)
   for playerID, playerState in pairs(GameState.Players) do
     if playerID ~= ao.id and isWithinDistance(currentPlayer.x, currentPlayer.y, playerState.x, playerState.y, 3) then
       enemyNearby = true
