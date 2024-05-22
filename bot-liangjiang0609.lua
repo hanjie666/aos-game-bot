@@ -45,7 +45,7 @@ end
 function determineNextAction()
   local currentPlayer = GameState.Players[ao.id]
   local enemyNearby = false
-
+  local trackHealth = currentPlayer.energy
   -- 检查 currentPlayer 是否为空
   if currentPlayer == nil then
     print("当前玩家不存在")
@@ -55,13 +55,19 @@ function determineNextAction()
   for playerID, playerState in pairs(GameState.Players) do
     if playerID ~= ao.id and isWithinDistance(currentPlayer.x, currentPlayer.y, playerState.x, playerState.y, 3) then
       enemyNearby = true
+      if currentPlayer.energy >= playerState.health then
+        trackHealth = playerState.health
+      end
+      if currentPlayer.energy < playerState.health then
+        trackHealth = currentPlayer.energy
+      end
       break
     end
   end
 
   if currentPlayer.energy > 1 and enemyNearby then
     print(colorCodes.red .. "敌人在范围内，发起攻击，干他嘿嘿嘿" .. colorCodes.reset)
-    ao.send({Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(currentPlayer.energy)})
+    ao.send({Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(trackHealth)})
   else
     print(colorCodes.red .. "没有敌人在范围内或能量不足，随机移动。" .. colorCodes.reset)
     local directions = {"Up", "Left", "Down", "Right", "UpRight", "UpLeft", "DownRight", "DownLeft"}
