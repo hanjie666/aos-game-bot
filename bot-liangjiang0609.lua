@@ -21,17 +21,27 @@ function logMessage(event, message)
   table.insert(ActivityLogs[event], message)
 end
 
--- 检查两个点之间的距离是否在指定范围内
--- @param x1, y1: 第一个点的坐标
--- @param x2, y2: 第二个点的坐标
--- @param distance: 允许的最大距离
--- @return: 布尔值，表示点是否在范围内
+-- 检查玩家的距离是否在指定范围内
 function isWithinDistance(x1, y1, x2, y2, distance)
   return (math.abs(x1 - x2) <= distance) and (math.abs(y1 - y2) <= distance)
 end
 
 -- 根据玩家的距离和能量决定下一步动作
 -- 如果有玩家在范围内则攻击，否则随机移动
+-- {
+--   "QM0gImIJwUuy49zwbXhl3YiYX9Ep_rSVprauXp8JflY": {
+--       "x": 27,
+--       "y": 11,
+--       "energy": 93,
+--       "health": 100
+--   },
+--   "QoJqFnqB-9mDPFeKhxld0PBGJPzbE4KHNI8aJ3JOAJY": {
+--       "x": 16,
+--       "y": 24,
+--       "energy": 93,
+--       "health": 100
+--   }
+-- }
 function determineNextAction()
   local currentPlayer = GameState.Players[ao.id]
   local enemyNearby = false
