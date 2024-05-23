@@ -65,7 +65,7 @@ function determineNextAction()
     end
   end
 
-  if currentPlayer.energy > 1 and enemyNearby then
+  if currentPlayer.energy > 20 and enemyNearby then
     print(colorCodes.red .. "敌人在范围内，发起攻击，干他嘿嘿嘿" .. colorCodes.reset)
     ao.send({Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(trackHealth)})
   else
