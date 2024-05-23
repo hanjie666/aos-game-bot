@@ -34,12 +34,6 @@ end
 --       "y": 11,
 --       "energy": 93,
 --       "health": 100
---   },
---   "QoJqFnqB-9mDPFeKhxld0PBGJPzbE4KHNI8aJ3JOAJY": {
---       "x": 16,
---       "y": 24,
---       "energy": 93,
---       "health": 100
 --   }
 -- }
 function determineNextAction()
@@ -51,7 +45,15 @@ function determineNextAction()
     print("当前玩家不存在")
     return
   end
-  print("我的血量：" .. currentPlayer.health)
+  print(colorCodes.red .. "我的血量：" .. currentPlayer.health .. colorCodes.reset)
+  if currentPlayer.health < 30 then
+    -- 血量不健康，往角落跑
+    if currentPlayer.x > 1 then
+      ao.send({Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Left"})
+    elseif currentPlayer.y > 1 then
+      ao.send({Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Down"})
+    end
+  end
   for playerID, playerState in pairs(GameState.Players) do
     if playerID ~= ao.id and isWithinDistance(currentPlayer.x, currentPlayer.y, playerState.x, playerState.y, 3) then
       enemyNearby = true
@@ -64,7 +66,6 @@ function determineNextAction()
       break
     end
   end
-
   if currentPlayer.energy > 20 and enemyNearby then
     print(colorCodes.red .. "敌人在范围内，发起攻击，干他嘿嘿嘿" .. colorCodes.reset)
     ao.send({Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(trackHealth)})
