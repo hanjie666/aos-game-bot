@@ -49,31 +49,32 @@ function determineNextAction()
   if currentPlayer.health < 30 then
     -- 血量不健康，往角落跑
     if currentPlayer.x > 1 then
-      ao.send({Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Left"})
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Left" })
     elseif currentPlayer.y > 1 then
-      ao.send({Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Down"})
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Down" })
     end
-  end
-  for playerID, playerState in pairs(GameState.Players) do
-    if playerID ~= ao.id and isWithinDistance(currentPlayer.x, currentPlayer.y, playerState.x, playerState.y, 3) then
-      enemyNearby = true
-      if currentPlayer.energy >= playerState.health then
-        trackHealth = playerState.health
-      end
-      if currentPlayer.energy < playerState.health then
-        trackHealth = currentPlayer.energy
-      end
-      break
-    end
-  end
-  if currentPlayer.energy > 20 and enemyNearby then
-    print(colorCodes.red .. "敌人在范围内，发起攻击，干他嘿嘿嘿" .. colorCodes.reset)
-    ao.send({Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(trackHealth)})
   else
-    print(colorCodes.red .. "没有敌人在范围内或能量不足，随机移动。" .. colorCodes.reset)
-    local directions = {"Up", "Left", "Down", "Right", "UpRight", "UpLeft", "DownRight", "DownLeft"}
-    local chosenDirection = directions[math.random(#directions)]
-    ao.send({Target = Game, Action = "PlayerMove", Player = ao.id, Direction = chosenDirection})
+    for playerID, playerState in pairs(GameState.Players) do
+      if playerID ~= ao.id and isWithinDistance(currentPlayer.x, currentPlayer.y, playerState.x, playerState.y, 3) then
+        enemyNearby = true
+        if currentPlayer.energy >= playerState.health then
+          trackHealth = playerState.health
+        end
+        if currentPlayer.energy < playerState.health then
+          trackHealth = currentPlayer.energy
+        end
+        break
+      end
+    end
+    if currentPlayer.energy > 20 and enemyNearby then
+      print(colorCodes.red .. "敌人在范围内，发起攻击，干他嘿嘿嘿" .. colorCodes.reset)
+      ao.send({ Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(trackHealth) })
+    else
+      print(colorCodes.red .. "没有敌人在范围内或能量不足，随机移动。" .. colorCodes.reset)
+      local directions = { "Up", "Left", "Down", "Right", "UpRight", "UpLeft", "DownRight", "DownLeft" }
+      local chosenDirection = directions[math.random(#directions)]
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = chosenDirection })
+    end
   end
   ActionInProgress = false -- 重置标志
 end
@@ -82,12 +83,12 @@ end
 Handlers.add(
   "PrintAnnouncements",
   Handlers.utils.hasMatchingTag("Action", "Announcement"),
-  function (message)
+  function(message)
     if message.Event == "Started-Waiting-Period" then
-      ao.send({Target = ao.id, Action = "AutoPay"})
+      ao.send({ Target = ao.id, Action = "AutoPay" })
     elseif (message.Event == "Tick" or message.Event == "Started-Game") and not ActionInProgress then
       ActionInProgress = true
-      ao.send({Target = Game, Action = "GetGameState"})
+      ao.send({ Target = Game, Action = "GetGameState" })
     elseif ActionInProgress then
       print("之前的操作仍在进行中，跳过。。。。。。")
     end
@@ -99,11 +100,11 @@ Handlers.add(
 Handlers.add(
   "GetGameStateOnTick",
   Handlers.utils.hasMatchingTag("Action", "Tick"),
-  function ()
+  function()
     if not ActionInProgress then
       ActionInProgress = true
       print(colorCodes.gray .. "获取游戏状态..." .. colorCodes.reset)
-      ao.send({Target = Game, Action = "GetGameState"})
+      ao.send({ Target = Game, Action = "GetGameState" })
     else
       print("之前的操作仍在进行中，跳过。。。。")
     end
@@ -114,9 +115,9 @@ Handlers.add(
 Handlers.add(
   "AutoPay",
   Handlers.utils.hasMatchingTag("Action", "AutoPay"),
-  function (message)
+  function(message)
     print("支付费用")
-    ao.send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000"})
+    ao.send({ Target = Game, Action = "Transfer", Recipient = Game, Quantity = "1000" })
     print("支付成功")
   end
 )
@@ -125,10 +126,10 @@ Handlers.add(
 Handlers.add(
   "UpdateGameState",
   Handlers.utils.hasMatchingTag("Action", "GameState"),
-  function (message)
+  function(message)
     local json = require("json")
     GameState = json.decode(message.Data)
-    ao.send({Target = ao.id, Action = "UpdatedGameState"})
+    ao.send({ Target = ao.id, Action = "UpdatedGameState" })
     print("游戏状态已更新。使用 'GameState' 查看详细信息。")
   end
 )
@@ -137,14 +138,14 @@ Handlers.add(
 Handlers.add(
   "decideNextAction",
   Handlers.utils.hasMatchingTag("Action", "UpdatedGameState"),
-  function ()
+  function()
     if GameState.GameMode ~= "Playing" then
       ActionInProgress = false
       return
     end
     print("决定下一步操作。")
     determineNextAction()
-    ao.send({Target = ao.id, Action = "Tick"})
+    ao.send({ Target = ao.id, Action = "Tick" })
   end
 )
 
@@ -152,22 +153,22 @@ Handlers.add(
 Handlers.add(
   "ReturnAttack",
   Handlers.utils.hasMatchingTag("Action", "Hit"),
-  function (message)
+  function(message)
     if not ActionInProgress then
       ActionInProgress = true
       local energy = GameState.Players[ao.id].energy
       if energy == nil then
         print(colorCodes.red .. "无法读取能量。" .. colorCodes.reset)
-        ao.send({Target = Game, Action = "Attack-Failed", Reason = "无法读取能量。"})
+        ao.send({ Target = Game, Action = "Attack-Failed", Reason = "无法读取能量。" })
       elseif energy == 0 then
         print(colorCodes.red .. "玩家能量不足。" .. colorCodes.reset)
-        ao.send({Target = Game, Action = "Attack-Failed", Reason = "能量不足。"})
+        ao.send({ Target = Game, Action = "Attack-Failed", Reason = "能量不足。" })
       else
         print(colorCodes.red .. "反击。" .. colorCodes.reset)
-        ao.send({Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(energy)})
+        ao.send({ Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(energy) })
       end
       ActionInProgress = false
-      ao.send({Target = ao.id, Action = "Tick"})
+      ao.send({ Target = ao.id, Action = "Tick" })
     else
       print("之前的操作仍在进行中，跳过。")
     end
