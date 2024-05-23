@@ -40,13 +40,38 @@ function determineNextAction()
   local currentPlayer = GameState.Players[ao.id]
   local enemyNearby = false
   local trackHealth = currentPlayer.energy
+  local distance = 100000
+  local minDistance = nil
   -- 检查 currentPlayer 是否为空
   if currentPlayer == nil then
     print("当前玩家不存在")
     return
   end
   print(colorCodes.red .. "我的血量：" .. currentPlayer.health .. colorCodes.reset)
-  if currentPlayer.health < 30 then
+  if currentPlayer.health < 20 then
+    -- 获取附近最近的人
+    for playerID, playerState in pairs(GameState.Players) do
+      if playerID ~= ao.id then
+        local playerDistance = (currentPlayer.x - playerState.x) * (currentPlayer.x - playerState.x) +
+            (currentPlayer.y - playerState.y) * (currentPlayer.y - playerState.y)
+        if playerDistance < distance then
+          distance = playerDistance
+          minDistance = playerState
+        end
+      end
+    end
+    -- 远离最近的人
+    if currentPlayer.x > minDistance.x then
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Right" })
+    elseif currentPlayer.x <= minDistance.x then
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Left" })
+    elseif currentPlayer.y > minDistance.y then
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Up" })
+    elseif currentPlayer.y < minDistance.y then
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Down" })
+    end
+  end
+  if currentPlayer.health < 50 then
     -- 血量不健康，往角落跑
     if currentPlayer.x > 1 then
       ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Left" })
