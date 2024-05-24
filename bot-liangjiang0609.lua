@@ -48,18 +48,18 @@ function determineNextAction()
     return
   end
   print(colorCodes.red .. "我的血量：" .. currentPlayer.health .. colorCodes.reset)
-  if currentPlayer.health < 20 then
-    -- 获取附近最近的人
-    for playerID, playerState in pairs(GameState.Players) do
-      if playerID ~= ao.id then
-        local playerDistance = (currentPlayer.x - playerState.x) * (currentPlayer.x - playerState.x) +
-            (currentPlayer.y - playerState.y) * (currentPlayer.y - playerState.y)
-        if playerDistance < distance then
-          distance = playerDistance
-          minDistance = playerState
-        end
+  -- 获取附近最近的人
+  for playerID, playerState in pairs(GameState.Players) do
+    if playerID ~= ao.id then
+      local playerDistance = (currentPlayer.x - playerState.x) * (currentPlayer.x - playerState.x) +
+          (currentPlayer.y - playerState.y) * (currentPlayer.y - playerState.y)
+      if playerDistance < distance then
+        distance = playerDistance
+        minDistance = playerState
       end
     end
+  end
+  if currentPlayer.health < 20 then
     -- 远离最近的人
     if currentPlayer.x > minDistance.x then
       ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Right" })
@@ -71,34 +71,33 @@ function determineNextAction()
       ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Down" })
     end
   end
-  if currentPlayer.health < 50 then
-    -- 血量不健康，往角落跑
-    if currentPlayer.x > 1 then
-      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Left" })
-    elseif currentPlayer.y > 1 then
-      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Down" })
-    end
-  else
-    for playerID, playerState in pairs(GameState.Players) do
-      if playerID ~= ao.id and isWithinDistance(currentPlayer.x, currentPlayer.y, playerState.x, playerState.y, 3) then
-        enemyNearby = true
-        if currentPlayer.energy >= playerState.health then
-          trackHealth = playerState.health
-        end
-        if currentPlayer.energy < playerState.health then
-          trackHealth = currentPlayer.energy
-        end
-        break
+  for playerID, playerState in pairs(GameState.Players) do
+    if playerID ~= ao.id and isWithinDistance(currentPlayer.x, currentPlayer.y, playerState.x, playerState.y, 3) then
+      enemyNearby = true
+      if currentPlayer.energy >= playerState.health then
+        trackHealth = playerState.health
       end
+      if currentPlayer.energy < playerState.health then
+        trackHealth = currentPlayer.energy
+      end
+      break
     end
-    if currentPlayer.energy > 20 and enemyNearby then
-      print(colorCodes.red .. "敌人在范围内，发起攻击，干他嘿嘿嘿" .. colorCodes.reset)
-      ao.send({ Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(trackHealth) })
-    else
-      print(colorCodes.red .. "没有敌人在范围内或能量不足，随机移动。" .. colorCodes.reset)
-      local directions = { "Up", "Left", "Down", "Right", "UpRight", "UpLeft", "DownRight", "DownLeft" }
-      local chosenDirection = directions[math.random(#directions)]
-      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = chosenDirection })
+  end
+  if currentPlayer.energy > 20 and enemyNearby then
+    print(colorCodes.red .. "敌人在范围内，发起攻击，干他嘿嘿嘿" .. colorCodes.reset)
+    ao.send({ Target = Game, Action = "PlayerAttack", Player = ao.id, AttackEnergy = tostring(trackHealth) })
+  else
+    -- 向距离最近的人移动
+    print(colorCodes.red .. "没有敌人在范围内或能量不足，向距离最近的人移动。" .. colorCodes.reset)
+
+    if currentPlayer.x > minDistance.x then
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Left" })
+    elseif currentPlayer.x <= minDistance.x then
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Right" })
+    elseif currentPlayer.y > minDistance.y then
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Down" })
+    elseif currentPlayer.y < minDistance.y then
+      ao.send({ Target = Game, Action = "PlayerMove", Player = ao.id, Direction = "Up" })
     end
   end
   ActionInProgress = false -- 重置标志
